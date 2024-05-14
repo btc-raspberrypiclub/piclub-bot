@@ -3,6 +3,7 @@ The main entrypoint to the bot
 """
 
 import os
+import logging
 
 from dotenv import load_dotenv
 
@@ -12,6 +13,23 @@ from logtools import log_print
 
 # Load .env variables into environment
 load_dotenv()
+
+# Setup logger
+logger = logging.getLogger(__name__)
+
+log_level = os.getenv("LOG_LEVEL")
+print(f"Log level var: {log_level}")
+if log_level is not None and log_level.upper() not in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"):
+    print("log level is not valid")
+    log_level = None
+
+globalconf.LOG_LEVEL = log_level
+
+print(f"globalconf.LOG_LEVEL: {globalconf.LOG_LEVEL}")
+
+logging.basicConfig(
+    level=globalconf.LOG_LEVEL
+)
 
 # Load configuration from environment
 globalconf.DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")

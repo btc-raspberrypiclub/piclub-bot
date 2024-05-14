@@ -20,3 +20,6 @@ DEFAULT_CONFIG_FILE: str = _os.path.join(
 # LLM server config
 LLM_HOST: str = "localhost"
 LLM_PORT: int = 11434
+
+# Logging
+LOG_LEVEL: str | None = None
