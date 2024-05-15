@@ -93,6 +93,7 @@ with open(globalconf.CONFIG_FILE, "r") as f:
 try:
     bot.client.run(
         globalconf.DISCORD_TOKEN,
+        log_handler=None,
     )
 except KeyboardInterrupt:
     print("Ctrl-C: Exiting") # Exit cleanly in case of a KeyboardInterrupt

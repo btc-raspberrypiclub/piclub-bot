@@ -4,9 +4,10 @@ Integration with LLMs
 
 import json
 import aiohttp
+import logging
+logger = logging.getLogger(__name__)
 
 import globalconf as _globalconf
-from logtools import log_print
 from . import botconf as _botconf
 
 import discord
@@ -17,11 +18,11 @@ async def generate_response(
     auto_pull_model: bool = _botconf.botconfig.auto_pull_model # TODO: Use this again
 ) -> str | None:
     url = f"http://{_globalconf.LLM_HOST}:{_globalconf.LLM_PORT}/api/generate"
-    log_print(f"url: {url}")
+    logger.info(f"url: {url}")
 
     # While receiving responses, show typing status
     async with message.channel.typing():
-        log_print(f"Generating response ...\nUser prompt:\n{message.content}\nSystem prompt:\n{system_prompt}")
+        logger.info(f"Generating response ...\nSystem prompt:\n{system_prompt}\nUser prompt:\n{message.content}")
 
         async with aiohttp.ClientSession() as cs:
             try:
@@ -34,12 +35,12 @@ async def generate_response(
                 }) as res:
                     data = await res.json()
                     if "error" in data:
-                        log_print(f"Error: {data['error']}")
-                        log_print(f"data: {json.dumps(data)}")
+                        logger.error(f"{data['error']}")
+                        logger.info(f"data: {json.dumps(data)}")
                         return None
 
                     dur = data["total_duration"] / 1_000_000_000
-                    log_print(f"response took {dur:.3f} seconds")
+                    logger.info(f"response took {dur:.3f} seconds")
 
                     return data["response"]
 
@@ -49,7 +50,7 @@ async def generate_response(
                 #if not isinstance(err_res, requests.models.Response):
                     #raise e
 
-                log_print(f"Error: {e}\nType: {type(e)}")
+                logger.error(f"{e}\nType: {type(e)}")
 
                 #if err_res.status_code == 404 and auto_pull_model:
                     #pull_model(_botconf.botconfig.llm_model)
