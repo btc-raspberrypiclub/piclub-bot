@@ -11,7 +11,35 @@ _intents = discord.Intents.default()
 _intents.message_content = True
 
 client = discord.Client(intents=_intents)
+conversation_history = []
 
+# FIXME: This will probably have race condition issues, GL HF :)
+def update_conversation_history(user_message, bot_response):
+    # Append the new user message and bot response to the conversation history
+    conversation_history.append({"role": "user", "content": user_message})
+    conversation_history.append({"role": "bot", "content": bot_response})
+
+    # Optionally, limit the history length to the last N messages
+    if len(conversation_history) > 20:
+        conversation_history = conversation_history[-20:]
+
+def context_from_conversation_history():
+    context = ""
+    for message in conversation_history:
+        context += f"{message['role']}: {message['content']}\n"
+    return context
+
+def generate_response_with_context(message):
+    context = context_from_conversation_history()
+
+    response = await llm.generate_response(
+        _botconf.botconfig.system_prompt +
+        f" The user's name is {message.author.name}" +
+        context +
+        f"user: {message}\nbot:"
+    )
+
+    return response
 
 def _is_command(text: str) -> bool:
     return text.startswith(_botconf.botconfig.command_prefix)
@@ -125,6 +153,7 @@ async def on_message(message: discord.Message):
         if not response is None:
             await message.reply(response)
             await client.change_presence(status=discord.Status.online)
+            await update_conversation_history(message, response)
         else:
             await client.change_presence(status=discord.Status.idle)
         return
@@ -140,11 +169,7 @@ async def on_message(message: discord.Message):
 
     if client.user in message.mentions:
         log_print("received message")
-        response = await llm.generate_response(
-            message,
-            _botconf.botconfig.system_prompt +
-            f" The user's name is {message.author.name}",
-        )
+        response = await generate_response_with_context(message)
         log_print(f"response: `{response}`")
         if not response is None:
             if len(response) > 2000:
@@ -155,6 +180,7 @@ async def on_message(message: discord.Message):
                 await message.reply(response)
 
             await client.change_presence(status=discord.Status.online)
+            await update_conversation_history(message, response)
         else:
             await client.change_presence(status=discord.Status.idle)
         return
