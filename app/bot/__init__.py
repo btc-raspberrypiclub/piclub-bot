@@ -125,7 +125,7 @@ async def on_message(message: discord.Message):
         if not response is None:
             await message.reply(response)
             await client.change_presence(status=discord.Status.online)
-            await llm.update_conversation_history(message, response)
+            llm.update_conversation_history(message, response)
         else:
             await client.change_presence(status=discord.Status.idle)
         return
@@ -152,7 +152,7 @@ async def on_message(message: discord.Message):
                 await message.reply(response)
 
             await client.change_presence(status=discord.Status.online)
-            await llm.update_conversation_history(message, response)
+            llm.update_conversation_history(message, response)
         else:
             await client.change_presence(status=discord.Status.idle)
         return
