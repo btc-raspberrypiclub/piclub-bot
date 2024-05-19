@@ -11,6 +11,37 @@ from . import botconf as _botconf
 
 import discord
 
+conversation_history = []
+
+# FIXME: This will probably have race condition issues, GL HF :)
+def update_conversation_history(user_message, bot_response):
+    # Append the new user message and bot response to the conversation history
+    conversation_history.append({"role": "user", "content": user_message})
+    conversation_history.append({"role": "bot", "content": bot_response})
+
+    # Optionally, limit the history length to the last N messages
+    if len(conversation_history) > 20:
+        conversation_history = conversation_history[-20:]
+
+# TODO: Add support for multiple channels
+def context_from_conversation_history():
+    context = ""
+    for message in conversation_history:
+        context += f"{message['role']}: {message['content']}\n"
+    return context
+
+async def generate_response_with_context(message):
+    context = context_from_conversation_history()
+
+    response = await llm.generate_response(
+        _botconf.botconfig.system_prompt +
+        f" The user's name is {message.author.name}" +
+        context +
+        f"user: {message}\nbot:"
+    )
+
+    return response
+
 async def generate_response(
     message: discord.Message,
     system_prompt: str = _botconf.botconfig.system_prompt,
