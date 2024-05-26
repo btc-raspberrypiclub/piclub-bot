@@ -1,9 +1,10 @@
 import random
+import logging
+logger = logging.getLogger(__name__)
 
 import discord
 
 import globalconf as _globalconf
-from logtools import log_print
 from . import botconf as _botconf
 from . import llm
 
@@ -96,7 +97,7 @@ async def _handle_command(command: str, args: list[str], message: discord.Messag
 
 @client.event
 async def on_ready():
-    log_print(f"Logged in as {client.user}")
+    logger.info(f"Logged in as {client.user}")
 
 
 @client.event
@@ -111,9 +112,9 @@ async def on_message(message: discord.Message):
         return
 
     if _is_greeting(message):
-        log_print("received greeting")
+        logger.info("received greeting")
         greeting = random.choice(_botconf.botconfig.greetings)
-        log_print(f"greeting: {greeting}")
+        logger.info(f"greeting: {greeting}")
         response = await llm.generate_response(
             message,
             _botconf.botconfig.system_prompt +
@@ -121,7 +122,7 @@ async def on_message(message: discord.Message):
             f" You will incorperate the phrase \"{greeting}\" into your greeting." +
             f" Their name is {message.author.name}.",
         )
-        log_print(f"response: `{response}`")
+        logger.info(f"response: `{response}`")
         if not response is None:
             await message.reply(response)
             await client.change_presence(status=discord.Status.online)
@@ -130,7 +131,7 @@ async def on_message(message: discord.Message):
         return
 
     if _is_command(message.content):
-        log_print("received command")
+        logger.info("received command")
         split_message = message.content.strip(" \t\n").split()
         command = split_message[0][len(_botconf.botconfig.command_prefix):]
         args = split_message[1:]
@@ -139,13 +140,13 @@ async def on_message(message: discord.Message):
         return
 
     if client.user in message.mentions:
-        log_print("received message")
+        logger.info("received message")
         response = await llm.generate_response(
             message,
             _botconf.botconfig.system_prompt +
             f" The user's name is {message.author.name}",
         )
-        log_print(f"response: `{response}`")
+        logger.info(f"response: `{response}`")
         if not response is None:
             if len(response) > 2000:
                 # Split message into <=2000 character chunks

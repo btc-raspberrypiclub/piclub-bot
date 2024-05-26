@@ -1,9 +1,10 @@
 from typing import Any
+import logging
+logger = logging.getLogger(__name__)
 
 import yaml
 
 import globalconf as _globalconf
-from logtools import log_print
 
 
 class Resource:
@@ -73,7 +74,7 @@ class BotConfig:
         self.auto_pull_model = merged_config["auto_pull_model"]
         self.system_prompt   = merged_config["system_prompt"]
 
-        log_print(f"Merged Config:\n{yaml.dump(merged_config)}")
+        logger.debug(f"Merged Config:\n{yaml.dump(merged_config)}")
 
 
 def _has_key_of_type(d: Any, k: str, t: type) -> bool:
@@ -134,7 +135,7 @@ def _merge_configs(user_config: Any, default_config: Any) -> dict[Any, Any]:
     if _has_key_of_type(user_config, "resources", list):
         for res in user_config["resources"]:
             if "name" not in res or "link" not in res:
-                log_print(f"Malformed resource: {res}")
+                logger.warning(f"Malformed resource: {res}")
                 continue
 
             if "desc" not in res:
@@ -146,8 +147,7 @@ def _merge_configs(user_config: Any, default_config: Any) -> dict[Any, Any]:
     else:
         for res in default_config["resources"]:
             if "name" not in res or "link" not in res:
-                # FIXME: This should throw an error
-                log_print(f"Malformed resource: {res}")
+                logger.warning(f"Malformed resource: {res}")
                 continue
 
             if "desc" not in res:
