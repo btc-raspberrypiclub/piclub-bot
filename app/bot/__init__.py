@@ -5,6 +5,7 @@ import discord
 
 import globalconf as _globalconf
 from . import botconf as _botconf
+from . import bothist as _bothist
 from . import llm
 
 logger = logging.getLogger(__name__)
@@ -16,12 +17,12 @@ client = discord.Client(intents=_intents)
 
 
 def _is_command(text: str) -> bool:
-    return text.startswith(_botconf.botconfig.command_prefix)
+    return text.startswith(_botconf.bot_config.command_prefix)
 
 
 def _is_greeting(message: discord.Message) -> bool:
     has_greeting_prefix = False
-    for greeting in _botconf.botconfig.greetings:
+    for greeting in _botconf.bot_config.greetings:
         if message.content.lower().startswith(greeting):
             has_greeting_prefix = True
             break
@@ -79,7 +80,7 @@ async def _handle_command(
     message: discord.Message,
 ):
     response = ""
-    pre = _botconf.botconfig.command_prefix
+    pre = _botconf.bot_config.command_prefix
     match command.lower():
         case "help" | "h":
             response += (
@@ -90,10 +91,10 @@ async def _handle_command(
             )
 
         case "resources" | "r":
-            if len(_botconf.botconfig.resources) == 0:
+            if len(_botconf.bot_config.resources) == 0:
                 response += "There are currently no resources"
             else:
-                for r in _botconf.botconfig.resources:
+                for r in _botconf.bot_config.resources:
                     response += "- " + str(r) + "\n"
         case _:
             response += "Unknown command. Type `" + pre+"help` for help"
@@ -110,56 +111,47 @@ async def on_ready():
 async def on_message(message: discord.Message):
     # Don't respond to messages from different guilds if it is enforced
     if not _in_guild(message):
-        if _botconf.botconfig.enforce_guild:
+        if _botconf.bot_config.enforce_guild:
             return
 
     # Don't respond to this bot's own messages
     if message.author == client.user:
         return
 
-    if _is_greeting(message):
-        logger.info("received greeting")
-        greeting = random.choice(_botconf.botconfig.greetings)
-        logger.info(f"greeting: {greeting}")
-        response = await llm.generate_response(
-            message,
-            _botconf.botconfig.system_prompt +
-            " You will respond with a somewhat short greeting and mention their name." +
-            f" You will incorperate the phrase \"{greeting}\" into your greeting." +
-            f" Their name is {message.author.name}.",
-        )
-        logger.info(f"response: `{response}`")
-        if response is not None:
-            await message.reply(response)
-            await client.change_presence(status=discord.Status.online)
-        else:
-            await client.change_presence(status=discord.Status.idle)
-        return
-
     if _is_command(message.content):
         logger.info("received command")
         split_message = message.content.strip(" \t\n").split()
-        command = split_message[0][len(_botconf.botconfig.command_prefix):]
+        command = split_message[0][len(_botconf.bot_config.command_prefix):]
         args = split_message[1:]
 
         await _handle_command(command, args, message)
         return
 
+    # Add message to history
+    _bothist.bot_history.add_message(message)
+
     if client.user in message.mentions:
         logger.info("received message")
+
         response = await llm.generate_response(
             message,
-            _botconf.botconfig.system_prompt +
-            f" The user's name is {message.author.name}",
+            _botconf.bot_config.system_prompt,
         )
         logger.info(f"response: `{response}`")
         if response is not None:
             if len(response) > 2000:
                 # Split message into <=2000 character chunks
                 for response_chunk in _split_text(response):
-                    await message.reply(response_chunk)
+                    _bothist.bot_history.add_message(
+                        await message.reply(response_chunk),
+                        is_bot=True,
+                    )
             else:
-                await message.reply(response)
+                # Reply to the message, and add the reply to the history
+                _bothist.bot_history.add_message(
+                    await message.reply(response),
+                    is_bot=True,
+                )
 
             await client.change_presence(status=discord.Status.online)
         else:

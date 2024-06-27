@@ -92,7 +92,7 @@ import bot  # TODO: Why can't I do `from . import bot`?
 from bot import botconf
 
 with open(globalconf.CONFIG_FILE, "r") as f:
-    botconf.botconfig.load_from_file(f)
+    botconf.bot_config.load_from_file(f)
 
 # Run bot
 try:

@@ -216,4 +216,4 @@ def _merge_configs(user_config: Any, default_config: Any) -> dict[Any, Any]:
     return merged_config
 
 
-botconfig = BotConfig()
+bot_config = BotConfig()
