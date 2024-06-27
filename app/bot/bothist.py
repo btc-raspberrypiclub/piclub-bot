@@ -6,12 +6,9 @@ from . import botconf as _botconf
 class MessageHistory:
     message_histories: dict[int, list[dict[str, str]]]
     """A dictionary that associates channel IDs to their histories"""
-    _message_limit: int
-    """Maximum allowed number of messages"""
 
     def __init__(self) -> None:
         self.message_histories = {}
-        self._message_limit = 40
 
     def add_message(
         self,
@@ -24,20 +21,19 @@ class MessageHistory:
             "content":
                 # Add author name and mention to content if it is not a bot
                 ("" if is_bot else
-                 f"({message.author.display_name} {message.author.mention}) ") +
-                f"{message.content}"
+                 f"({message.author.display_name} {message.author.mention})") +
+                f" {message.content}"
         }
 
         chan_id = message.channel.id
+        hist_len = _botconf.bot_config.history_length
         if chan_id in self.message_histories:
             self.message_histories[chan_id].append(msg_dict)
-            if len(self.message_histories[chan_id]) > self._message_limit:
+            if len(self.message_histories[chan_id]) > hist_len:
                 # Truncate the channel's history to the last
                 # `history_length` messages
                 self.message_histories[chan_id] = (
-                    self.message_histories
-                    [chan_id]
-                    [-_botconf.bot_config.history_length:]
+                    self.message_histories[chan_id][-hist_len:]
                 )
         else:
             self.message_histories[chan_id] = [msg_dict]

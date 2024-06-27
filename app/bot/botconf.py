@@ -195,32 +195,31 @@ def _merge_configs(user_config: Any, default_config: Any) -> dict[Any, Any]:
     else:
         merged_config["history_length"] = default_config["history_length"]
 
+    other_prompt = (
+        # FIXME: This is a bad place to put the information about commands
+        " You can help people if they run the command" +
+        f" `{merged_config['command_prefix']}help`." +
+        " You can give information about resources if they type the" +
+        f" command `{merged_config['command_prefix']}resources`." +
+        " The users' messages will all be prefixed with" +
+        " (user_name user_id), where the user's name is user_name, and" +
+        " the user's id is user_id (the angle brackets are required)." +
+        " To mention someone, use their user_id with angle brackets and @."
+    )
+    name_prompt = (
+        "" if merged_config["bot_name"] == ""
+        else f" Your name is {merged_config['bot_name']}."
+    )
+
     if not _has_key_of_type(default_config, "system_prompt", str):
         raise Exception("default_config is missing a key `system_prompt`")
     if _has_key_of_type(user_config, "system_prompt", str):
-        # FIXME: This is a bad place to put the information about commands
-        name_prompt = (
-            "" if merged_config["bot_name"] == ""
-            else f" Your name is {merged_config['bot_name']}."
-        )
         merged_config["system_prompt"] = (
-            user_config["system_prompt"] + name_prompt +
-            " You can help people if they run the command" +
-            f" `{merged_config['command_prefix']}help`." +
-            " You can give information about resources if they type the" +
-            f" command `{merged_config['command_prefix']}resources`."
+            user_config["system_prompt"] + name_prompt + other_prompt
         )
     else:
-        name_prompt = (
-            "" if merged_config["bot_name"] == ""
-            else f" Your name is {merged_config['bot_name']}."
-        )
         merged_config["system_prompt"] = (
-            default_config["system_prompt"] + name_prompt +
-            " You can help people if they run the command" +
-            f" `{merged_config['command_prefix']}help`." +
-            " You can give information about resources if they type the" +
-            f"command `{merged_config['command_prefix']}resources`."
+            default_config["system_prompt"] + name_prompt + other_prompt
         )
 
     return merged_config

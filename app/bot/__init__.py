@@ -156,3 +156,4 @@ async def on_message(message: discord.Message):
         else:
             await client.change_presence(status=discord.Status.idle)
         return
+    logger.info("message didn't mention the bot")
