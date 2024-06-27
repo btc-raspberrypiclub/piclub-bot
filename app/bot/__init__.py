@@ -1,12 +1,13 @@
 import random
 import logging
-logger = logging.getLogger(__name__)
 
 import discord
 
 import globalconf as _globalconf
 from . import botconf as _botconf
 from . import llm
+
+logger = logging.getLogger(__name__)
 
 _intents = discord.Intents.default()
 _intents.message_content = True
@@ -72,16 +73,21 @@ def _split_text(text: str, max_len: int = 2000) -> list[str]:
             return split_text
 
 
-async def _handle_command(command: str, args: list[str], message: discord.Message):
+async def _handle_command(
+    command: str,
+    args: list[str],
+    message: discord.Message,
+):
     response = ""
     pre = _botconf.botconfig.command_prefix
     match command.lower():
         case "help" | "h":
-            response +=\
-                "```\n" +\
-                pre+"help       " + pre+"h  -  " + "show this help message\n" +\
-                pre+"resources  " + pre+"r  -  " + "list resources\n" +\
+            response += (
+                "```\n" +
+                pre+"help       " + pre+"h  -  " + "show this help message\n" +
+                pre+"resources  " + pre+"r  -  " + "list resources\n" +
                 "```"
+            )
 
         case "resources" | "r":
             if len(_botconf.botconfig.resources) == 0:
@@ -123,7 +129,7 @@ async def on_message(message: discord.Message):
             f" Their name is {message.author.name}.",
         )
         logger.info(f"response: `{response}`")
-        if not response is None:
+        if response is not None:
             await message.reply(response)
             await client.change_presence(status=discord.Status.online)
         else:
@@ -147,7 +153,7 @@ async def on_message(message: discord.Message):
             f" The user's name is {message.author.name}",
         )
         logger.info(f"response: `{response}`")
-        if not response is None:
+        if response is not None:
             if len(response) > 2000:
                 # Split message into <=2000 character chunks
                 for response_chunk in _split_text(response):
