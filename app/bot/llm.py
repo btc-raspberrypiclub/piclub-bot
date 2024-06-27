@@ -37,7 +37,10 @@ async def generate_response(
             *_bothist.bot_history.message_histories[message.channel.id],
         ]
 
-        logger.info(", ".join([f"{{{msg['role'][0:1]}: '{msg['content'][0:10]}'}}" for msg in messages]))
+        logger.info(", ".join([
+            f"{{{m['role'][0:1]}: '{m['content'][0:10]}'}}"
+            for m in messages
+        ]))
 
         async with aiohttp.ClientSession() as cs:
             try:
@@ -58,6 +61,6 @@ async def generate_response(
                     return data["message"]["content"]
 
             except Exception as e:
-                logger.error(f"{e}\nType: {type(e)}")
+                logger.error(f"{type(e)}: {e}")
 
                 return None

@@ -1,5 +1,7 @@
 import discord
 
+from . import botconf as _botconf
+
 
 class MessageHistory:
     message_histories: dict[int, list[dict[str, str]]]
@@ -20,11 +22,9 @@ class MessageHistory:
         msg_dict = {
             "role": "assistant" if is_bot else "user",
             "content":
-            # Add author name and mention to content if it is not a bot
-                (
-                    "" if is_bot
-                    else f"({message.author.name} {message.author.mention}) "
-                ) +
+                # Add author name and mention to content if it is not a bot
+                ("" if is_bot else
+                 f"({message.author.display_name} {message.author.mention}) ") +
                 f"{message.content}"
         }
 
@@ -33,9 +33,11 @@ class MessageHistory:
             self.message_histories[chan_id].append(msg_dict)
             if len(self.message_histories[chan_id]) > self._message_limit:
                 # Truncate the channel's history to the last
-                # `_message_limit` messages
+                # `history_length` messages
                 self.message_histories[chan_id] = (
-                    self.message_histories[chan_id][-self._message_limit:]
+                    self.message_histories
+                    [chan_id]
+                    [-_botconf.bot_config.history_length:]
                 )
         else:
             self.message_histories[chan_id] = [msg_dict]

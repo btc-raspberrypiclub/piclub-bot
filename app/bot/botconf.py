@@ -39,6 +39,7 @@ class BotConfig:
     llm_enabled: bool
     llm_model: str
     auto_pull_model: bool
+    history_length: int
     system_prompt: str
 
     def __init__(self):
@@ -50,6 +51,7 @@ class BotConfig:
         self.llm_enabled = False
         self.llm_model = "llama2"
         self.auto_pull_model = False
+        self.history_length = 30
         self.system_prompt = ""
 
     def load_from_file(self, f):
@@ -69,6 +71,7 @@ class BotConfig:
         self.llm_enabled = merged_config["llm_enabled"]
         self.llm_model = merged_config["llm_model"]
         self.auto_pull_model = merged_config["auto_pull_model"]
+        self.history_length = merged_config["history_length"]
         self.system_prompt = merged_config["system_prompt"]
 
         logger.debug(f"Merged Config:\n{yaml.dump(merged_config)}")
@@ -184,6 +187,13 @@ def _merge_configs(user_config: Any, default_config: Any) -> dict[Any, Any]:
         merged_config["auto_pull_model"] = user_config["auto_pull_model"]
     else:
         merged_config["auto_pull_model"] = default_config["auto_pull_model"]
+
+    if not _has_key_of_type(default_config, "history_length", int):
+        raise Exception("default_config is missing a key `history_length`")
+    if _has_key_of_type(user_config, "history_length", int):
+        merged_config["history_length"] = user_config["history_length"]
+    else:
+        merged_config["history_length"] = default_config["history_length"]
 
     if not _has_key_of_type(default_config, "system_prompt", str):
         raise Exception("default_config is missing a key `system_prompt`")
