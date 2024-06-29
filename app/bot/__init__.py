@@ -127,7 +127,7 @@ async def on_message(message: discord.Message):
         return
 
     # Add message to history
-    _bothist.bot_history.add_message(message)
+    _bothist.bot_history.add_message([message])
 
     if client.user in message.mentions:
         logger.info("received message")
@@ -140,15 +140,18 @@ async def on_message(message: discord.Message):
         if response is not None:
             if len(response) > 2000:
                 # Split message into <=2000 character chunks
+                message_chunks: list[discord.Message] = []
                 for response_chunk in _split_text(response):
-                    _bothist.bot_history.add_message(
-                        await message.reply(response_chunk),
-                        is_bot=True,
-                    )
+                    message_chunks.append(await message.reply(response_chunk))
+
+                _bothist.bot_history.add_message(
+                    message_chunks,
+                    is_bot=True,
+                )
             else:
                 # Reply to the message, and add the reply to the history
                 _bothist.bot_history.add_message(
-                    await message.reply(response),
+                    [await message.reply(response)],
                     is_bot=True,
                 )
 
