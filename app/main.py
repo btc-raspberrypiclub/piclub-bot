@@ -85,6 +85,7 @@ if llm_port is not None:
 logger.info(f"LLM_HOST={globalconf.LLM_HOST}")
 logger.info(f"LLM_PORT={globalconf.LLM_PORT}")
 
+
 # -------- Main --------
 
 # Import internal modules that depend on configuration after changes
@@ -92,7 +93,7 @@ import bot  # TODO: Why can't I do `from . import bot`?
 from bot import botconf
 
 with open(globalconf.CONFIG_FILE, "r") as f:
-    botconf.botconfig.load_from_file(f)
+    botconf.bot_config.load_from_file(f)
 
 # Run bot
 try:
