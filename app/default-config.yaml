@@ -6,9 +6,6 @@
 # the option in this file will be overwritten.            #
 #=========================================================#
 
-# The prefix to put before a message to mark it as a command. (e.g. !help)
-command_prefix: "!"
-
 # List of words that mark a message as a
 # "greeting" if they are at the beggining of the message
 greetings:
