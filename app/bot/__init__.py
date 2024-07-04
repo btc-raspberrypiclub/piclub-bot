@@ -1,11 +1,13 @@
 import logging
 
 import discord
+from discord import app_commands
 
 import globalconf as _globalconf
 from . import botconf as _botconf
 from . import bothist as _bothist
 from . import llm
+from . import botcmds as _botcmds
 
 logger = logging.getLogger(__name__)
 
@@ -13,23 +15,10 @@ _intents = discord.Intents.default()
 _intents.message_content = True
 
 client = discord.Client(intents=_intents)
+tree = app_commands.CommandTree(client)
 
 
-def _is_command(text: str) -> bool:
-    return text.startswith(_botconf.bot_config.command_prefix)
-
-
-def _is_greeting(message: discord.Message) -> bool:
-    has_greeting_prefix = False
-    for greeting in _botconf.bot_config.greetings:
-        if message.content.lower().startswith(greeting):
-            has_greeting_prefix = True
-            break
-
-    if not has_greeting_prefix:
-        return False
-
-    return client.user in message.mentions
+# ---- Internal Helper Functions ----
 
 
 def _in_guild(message: discord.Message) -> bool:
@@ -73,36 +62,29 @@ def _split_text(text: str, max_len: int = 2000) -> list[str]:
             return split_text
 
 
-async def _handle_command(
-    command: str,
-    args: list[str],
-    message: discord.Message,
-):
-    response = ""
-    pre = _botconf.bot_config.command_prefix
-    match command.lower():
-        case "help" | "h":
-            response += (
-                "```\n" +
-                pre+"help       " + pre+"h  -  " + "show this help message\n" +
-                pre+"resources  " + pre+"r  -  " + "list resources\n" +
-                "```"
-            )
+# ---- App Commands ----
 
-        case "resources" | "r":
-            if len(_botconf.bot_config.resources) == 0:
-                response += "There are currently no resources"
-            else:
-                for r in _botconf.bot_config.resources:
-                    response += "- " + str(r) + "\n"
-        case _:
-            response += "Unknown command. Type `" + pre+"help` for help"
 
-    await message.channel.send(response, suppress_embeds=True)
+tree.add_command(_botcmds.help)
+
+tree.add_command(_botcmds.resources)
+
+
+# ---- Event handlers ----
 
 
 @client.event
 async def on_ready():
+    guild = None
+    if _globalconf.DISCORD_GUILD is not None:
+        guild = discord.Object(id=_globalconf.DISCORD_GUILD)
+
+    logger.info(f"Guild ID: {_globalconf.DISCORD_GUILD}")
+    logger.info(f"{guild}")
+
+    logger.info("syncing commands...")
+    await tree.sync(guild=guild)
+    logger.info("done syncing.")
     logger.info(f"Logged in as {client.user}")
 
 
@@ -115,15 +97,6 @@ async def on_message(message: discord.Message):
 
     # Don't respond to this bot's own messages
     if message.author == client.user:
-        return
-
-    if _is_command(message.content):
-        logger.info("received command")
-        split_message = message.content.strip(" \t\n").split()
-        command = split_message[0][len(_botconf.bot_config.command_prefix):]
-        args = split_message[1:]
-
-        await _handle_command(command, args, message)
         return
 
     # Add message to history

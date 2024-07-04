@@ -31,7 +31,6 @@ class Resource:
 
 
 class BotConfig:
-    command_prefix: str
     greetings: list[str]
     enforce_guild: bool
     resources: list[Resource]
@@ -43,7 +42,6 @@ class BotConfig:
     system_prompt: str
 
     def __init__(self):
-        self.command_prefix = "!"
         self.greetings = ["hello", "hi", "hey"]
         self.enforce_guild = True
         self.resources = []
@@ -63,7 +61,6 @@ class BotConfig:
         # This will raise an exception if default_config is malformed
         merged_config = _merge_configs(user_config, default_config)
 
-        self.command_prefix = merged_config["command_prefix"]
         self.greetings = merged_config["greetings"]
         self.enforce_guild = merged_config["enforce_guild"]
         self.resources = merged_config["resources"]
@@ -108,13 +105,6 @@ def _merge_configs(user_config: Any, default_config: Any) -> dict[Any, Any]:
         user_config = {}
 
     merged_config = {}
-
-    if not _has_key_of_type(default_config, "command_prefix", str):
-        raise Exception("default_config is missing a key `command_prefix`")
-    if _has_key_of_type(user_config, "command_prefix", str):
-        merged_config["command_prefix"] = user_config["command_prefix"]
-    else:
-        merged_config["command_prefix"] = default_config["command_prefix"]
 
     if not ("greetings" in default_config and
             _all_isinstance(default_config["greetings"], str)):
@@ -197,10 +187,9 @@ def _merge_configs(user_config: Any, default_config: Any) -> dict[Any, Any]:
 
     other_prompt = (
         # FIXME: This is a bad place to put the information about commands
-        " You can help people if they run the command" +
-        f" `{merged_config['command_prefix']}help`." +
-        " You can give information about resources if they type the" +
-        f" command `{merged_config['command_prefix']}resources`." +
+        " You can help people if they run the command `/help`." +
+        " You can give information about resources if"
+        " they run the command `/resources`." +
         " The users' messages will all be prefixed with" +
         " (user_name user_id), where the user's name is user_name, and" +
         " the user's id is user_id (the angle brackets are required)." +
