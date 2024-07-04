@@ -32,12 +32,16 @@ llm_model: llama2
 
 # Whether to automatically pull the `llm_model` if it is
 # not available on the Ollama server
+# FIXME: Currently unused
 auto_pull_model: false
 
 # System prompt to pass to the LLM.
 # Use this to customize the responses of the LLM.
 # (e.g. "You are a robot built by the Raspberry Pi Club")
 system_prompt: ""
+
+# Maximum message history length.
+history_length: 30
 
 
 # List of resources to show when `!resources` is run.
